@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101722">
+<title>Glow Grid — A Little Light Puzzle</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+:root{color-scheme:dark;--bg:#101722;--panel:#192330;--text:#edf4ed;--muted:#93a3af;--lime:#d8fa8c;--line:#2b3846}
+*{box-sizing:border-box}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;justify-content:center;align-items:center;padding:24px 18px;background-image:radial-gradient(ellipse at 50% 35%,#23352f55,transparent 65%)}
+button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid white;outline-offset:5px}
+button:disabled{cursor:default;opacity:.35}
+.app{width:100%;max-width:460px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px}
+.brand{display:flex;align-items:center;gap:11px;font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:600;letter-spacing:-.7px}
+.logo{display:grid;grid-template-columns:repeat(2,7px);gap:3px;transform:rotate(-8deg)}
+.logo i{width:7px;height:7px;background:var(--lime);border-radius:2px}.logo i:last-child{opacity:.35}
+.icon-btn{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:50%;height:38px;width:38px;display:grid;place-items:center}
+.icon-btn:hover{color:var(--lime);border-color:#839666}
+.eyebrow{color:var(--lime);letter-spacing:2px;font-size:10px;font-weight:700;text-transform:uppercase}
+h1,h2{font-family:'Space Grotesk',sans-serif;font-weight:500;letter-spacing:-1.5px}
+h1{font-size:37px;margin:8px 0 8px}
+.intro p{color:var(--muted);font-size:14px;line-height:1.6;margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:15px;margin:25px 0 24px;padding:15px 0;background:#18212c88}
+.stat{text-align:center;border-right:1px solid var(--line)}.stat:last-child{border:0}
+.stat small{display:block;font-size:10px;letter-spacing:1.7px;color:var(--muted);margin-bottom:5px}
+.stat strong{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:500}
+.stat strong span{font-size:14px;color:#647586}
+.board-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin:0 3px 12px}
+.board-top .dot{display:inline-block;height:6px;width:6px;border-radius:50%;background:var(--lime);margin-right:6px;box-shadow:0 0 10px #d8fa8c77}
+.board-shell{padding:13px;border:1px solid #354334;border-radius:23px;background:#1a252a;box-shadow:0 20px 60px #0003}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cell{position:relative;aspect-ratio:1;border:1px solid #3b4954;background:#26323e;border-radius:13px;transition:background .2s,box-shadow .2s,border-color .2s,transform .15s;display:grid;place-items:center;touch-action:manipulation}
+.cell::before{content:'';width:16px;height:16px;border:1.5px solid #61717e;border-radius:50%;transition:all .2s}
+.cell.on{background:var(--lime);border-color:#eaffbf;box-shadow:0 0 20px #d8fa8c12,inset 0 1px 0 #ffffff88}
+.cell.on::before{background:#506438;border-color:#506438;box-shadow:0 0 0 5px #74954822;width:11px;height:11px}
+.cell:hover{transform:translateY(-2px);border-color:#b0c49d}
+.cell:active{transform:scale(.93)}
+.cell.pulse{animation:pop .28s ease}
+.cell.hint{animation:hint 1s ease-in-out infinite;z-index:1}
+@keyframes pop{50%{transform:scale(.92)}}
+@keyframes hint{50%{outline:3px solid #fff;outline-offset:3px;transform:scale(.94)}}
+.actions{display:flex;gap:9px;margin:20px 0 16px}
+.action{flex:1;border:1px solid var(--line);background:#19232f;color:#c5d0d7;border-radius:11px;padding:12px 6px;font-size:12px;display:flex;justify-content:center;align-items:center;gap:7px;transition:background .2s}
+.action:not(:disabled):hover{background:#28363e}
+.action svg{width:15px;height:15px}
+#message{min-height:35px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6;margin:0}
+footer{display:flex;justify-content:space-between;border-top:1px solid #26313c;padding-top:18px;margin-top:14px;font-size:10px;letter-spacing:1.3px;color:#748594}
+.overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:#0a111ac9;backdrop-filter:blur(10px);padding:22px;transition:opacity .2s}
+.overlay[hidden]{display:none}
+.modal{width:100%;max-width:395px;border:1px solid #3b4943;border-radius:25px;background:linear-gradient(145deg,#23312f,#18212c 70%);padding:36px 29px;text-align:center;box-shadow:0 30px 100px #0006;animation:enter .3s ease}
+@keyframes enter{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+.modal h2{font-size:35px;line-height:1.15;margin:13px 0}
+.modal p{font-size:14px;line-height:1.7;color:#aab9bf;margin:0 0 22px}
+.mini-grid{display:grid;grid-template-columns:repeat(3,20px);gap:5px;justify-content:center;margin:2px auto 24px;transform:rotate(-8deg)}
+.mini-grid i{aspect-ratio:1;background:#34434c;border-radius:5px}.mini-grid i.lit{background:var(--lime);box-shadow:0 0 15px #d8fa8c15}
+.primary{width:100%;border:0;background:var(--lime);color:#23311b;padding:15px 20px;border-radius:12px;font-weight:700;font-size:14px;transition:transform .15s,background .15s}
+.primary:hover{background:#e4ffac;transform:translateY(-1px)}
+.subnote{display:block;color:#7e9299;font-size:11px;margin-top:16px;line-height:1.6}
+.result{display:flex;justify-content:center;gap:32px;margin:24px 0}
+.result div{font-size:11px;color:var(--muted)}
+.result strong{display:block;font:500 29px 'Space Grotesk',sans-serif;color:var(--lime);margin-bottom:4px}
+.confetti{position:fixed;pointer-events:none;z-index:12;width:7px;height:10px;border-radius:2px;animation:fall 1.8s ease-out forwards}
+@keyframes fall{from{transform:translate(0,-10px) rotate(0);opacity:1}to{transform:translate(var(--drift),65vh) rotate(600deg);opacity:0}}
+@media(max-width:380px){body{padding:18px 14px}header{margin-bottom:22px}h1{font-size:32px}.board{gap:8px}.board-shell{padding:10px}.cell{border-radius:10px}.stats{margin:19px 0}.modal{padding:28px 22px}}
+@media(prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+<div class="brand"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>glow grid</div>
+<button class="icon-btn" id="sound" aria-label="Enable sound" title="Toggle sound">♪</button>
+</header>
+<section class="intro">
+<div class="eyebrow">A little moment of clarity</div>
+<h1>Let there be light.</h1>
+<p>Tap a tile. Flip its neighbors.<br>Find the pattern and light up the whole grid.</p>
+</section>
+<div class="stats">
+<div class="stat"><small>LEVEL</small><strong id="level">1 <span>/ 5</span></strong></div>
+<div class="stat"><small>MOVES</small><strong id="moves">0</strong></div>
+<div class="stat"><small>SCORE</small><strong id="score">0</strong></div>
+</div>
+<div class="board-top"><span><span class="dot"></span><span id="lit">0</span> of 16 glowing</span><span id="par">Find your first move</span></div>
+<div class="board-shell"><div class="board" id="board" role="group" aria-label="Light puzzle, four by four grid"></div></div>
+<div class="actions">
+<button class="action" id="undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 4 3 9l5 5M3 9h10a7 7 0 0 1 0 14" transform="translate(0 -2)"/></svg>Undo</button>
+<button class="action" id="reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6"/></svg>Reset</button>
+<button class="action" id="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18h6m-6 3h6M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/></svg>Hint</button>
+</div>
+<p id="message" aria-live="polite">Every tap flips a tile and its direct neighbors.</p>
+<footer><span>NO TIMER. JUST YOU & THE GRID.</span><span>BEST <b id="best">0</b></span></footer>
+</main>
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<div class="modal" id="modal"></div>
+</div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const FULL = 65535;
+const masks = Array.from({length:16},(_,i)=>{
+ let m=1<<i,r=i>>2,c=i%4;
+ if(r>0)m|=1<<(i-4);if(r<3)m|=1<<(i+4);
+ if(c>0)m|=1<<(i-1);if(c<3)m|=1<<(i+1);
+ return m;
+});
+let grid=0,initial=0,level=1,moves=0,score=0,par=0,hints=0,history=[],state='start',hintIndex=-1;
+let sound=false,audio,best=0,transitionTimer;
+try{best=Number(localStorage.getItem('glow-grid-best'))||0}catch(e){}
+$('best').textContent=best;
+const cells=[];
+for(let i=0;i<16;i++){
+ const b=document.createElement('button');
+ b.className='cell';b.type='button';b.addEventListener('click',()=>tap(i));
+ b.addEventListener('keydown',e=>{
+  let next=i;
+  if(e.key==='ArrowRight')next=(i+1)%16;
+  else if(e.key==='ArrowLeft')next=(i+15)%16;
+  else if(e.key==='ArrowDown')next=(i+4)%16;
+  else if(e.key==='ArrowUp')next=(i+12)%16;
+  else return;
+  e.preventDefault();cells[next].focus();
+ });
+ cells.push(b);$('board').appendChild(b);
+}
+function count(n){let c=0;while(n){n&=n-1;c++}return c}
+function solve(board){
+ const target=board^FULL,rows=[];
+ for(let r=0;r<16;r++){
+  let row=((target>>r)&1)<<16;
+  for(let c=0;c<16;c++)if((masks[c]>>r)&1)row|=1<<c;
+  rows.push(row);
+ }
+ let rank=0;const pivots=[];
+ for(let c=0;c<16;c++){
+  let p=rank;while(p<16&&!((rows[p]>>c)&1))p++;
+  if(p===16)continue;
+  [rows[p],rows[rank]]=[rows[rank],rows[p]];
+  for(let r=0;r<16;r++)if(r!==rank&&((rows[r]>>c)&1))rows[r]^=rows[rank];
+  pivots.push(c);rank++;
+ }
+ const free=[];for(let c=0;c<16;c++)if(!pivots.includes(c))free.push(c);
+ let bestSolution=0,bestCount=99;
+ for(let s=0;s<(1<<free.length);s++){
+  let x=0;free.forEach((c,j)=>{if((s>>j)&1)x|=1<<c});
+  for(let r=0;r<rank;r++){
+   const bit=((rows[r]>>16)&1)^(count((rows[r]&FULL)&x)%2);
+   if(bit)x|=1<<pivots[r];
+  }
+  const n=count(x);if(n<bestCount){bestCount=n;bestSolution=x}
+ }
+ return bestSolution;
+}
+function tone(freq=400,duration=.12,delay=0){
+ if(!sound)return;
+ try{
+  if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==='suspended')audio.resume();
+  const t=audio.currentTime+delay,o=audio.createOscillator(),g=audio.createGain();
+  o.type='sine';o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(freq*.8,t+duration);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.07,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+duration);
+  o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+duration+.02);
+ }catch(e){}
+}
+function render(){
+ cells.forEach((b,i)=>{
+  b.classList.toggle('on',!!((grid>>i)&1));
+  b.classList.toggle('hint',i===hintIndex);
+  b.setAttribute('aria-label',`Row ${(i>>2)+1}, column ${i%4+1}: ${(grid>>i)&1?'lit':'unlit'}. Flip this tile and its neighbors.`);
+  b.setAttribute('aria-pressed',String(!!((grid>>i)&1)));
+  b.disabled=state!=='playing';
+ });
+ $('level').innerHTML=level+' <span>/ 5</span>';
+ $('moves').textContent=moves;$('score').textContent=score;
+ $('lit').textContent=count(grid);$('par').textContent=par?`Can you do it in ${par}?`:'Find your first move';
+ $('undo').disabled=state!=='playing'||!history.length;
+ $('reset').disabled=state!=='playing'||!history.length;
+ $('hint').disabled=state!=='playing';
+}
+function message(text){$('message').textContent=text}
+function startLevel(){
+ clearTimeout(transitionTimer);
+ let candidate=FULL,quality=-1;
+ const target=level+2;
+ for(let attempt=0;attempt<150;attempt++){
+  let b=FULL;
+  const indices=Array.from({length:16},(_,i)=>i);
+  for(let n=0;n<target;n++){
+   const j=n+Math.floor(Math.random()*(16-n));
+   [indices[n],indices[j]]=[indices[j],indices[n]];
+   b^=masks[indices[n]];
+  }
+  const q=count(solve(b));
+  if(q>quality){candidate=b;quality=q}
+  if(q>=target)break;
+ }
+ initial=grid=candidate;par=quality;moves=0;hints=0;history=[];hintIndex=-1;state='playing';
+ $('overlay').hidden=true;message('Every tap flips a tile and its direct neighbors.');render();
+ cells[0].focus({preventScroll:true});
+}
+function tap(i){
+ if(state!=='playing')return;
+ history.push(i);grid^=masks[i];moves++;hintIndex=-1;
+ masks.forEach(()=>{});
+ cells.forEach((b,j)=>{
+  if((masks[i]>>j)&1){b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse')}
+ });
+ tone(260+count(grid)*24);
+ message('Looking good. Make every tile glow.');render();
+ if(grid===FULL){
+  state='cleared';render();message('All lit up. Beautifully done!');
+  transitionTimer=setTimeout(finishLevel,450);
+ }
+}
+function confetti(){
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ for(let i=0;i<32;i++){
+  const el=document.createElement('i');el.className='confetti';
+  el.style.left=(25+Math.random()*50)+'vw';el.style.top='20vh';
+  el.style.background=['#d8fa8c','#88d9c3','#eef4d6'][i%3];
+  el.style.setProperty('--drift',(Math.random()-.5)*340+'px');
+  el.style.animationDelay=(Math.random()*.25)+'s';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),2300);
+ }
+}
+function finishLevel(){
+ const earned=Math.max(100,1000+par*140-moves*80-hints*120);
+ score+=earned;
+ const newBest=score>best;
+ if(newBest){best=score;try{localStorage.setItem('glow-grid-best',best)}catch(e){}}
+ $('best').textContent=best;render();confetti();
+ [440,554,659,880].forEach((f,i)=>tone(f,.3,i*.09));
+ if(level===5){
+  state='over';
+  showModal(`<div class="eyebrow">Five grids. One bright mind.</div><h2>You found your glow.</h2><p>Every light is on. Take a little victory moment — you earned it.</p><div class="result"><div><strong>${score.toLocaleString()}</strong>FINAL SCORE</div><div><strong>${best.toLocaleString()}</strong>PERSONAL BEST</div></div><button class="primary" id="modal-action">Play a fresh set ↗</button><span class="subnote">New puzzles. A whole new spark.</span>`,()=>{
+   level=1;score=0;startLevel();
+  });
+ }else{
+  showModal(`<div class="eyebrow">Level ${level} complete</div><h2>${moves<=par?'Perfectly brilliant.':'A bright little win.'}</h2><p>You brought every tile to life.<br>Ready for another little twist?</p><div class="result"><div><strong>${moves}</strong>MOVES · PAR ${par}</div><div><strong>+${earned}</strong>POINTS</div></div><button class="primary" id="modal-action">Next puzzle ↗</button><span class="subnote">${5-level} more ${5-level===1?'grid':'grids'} to brighten your day.</span>`,()=>{
+   level++;startLevel();
+  });
+ }
+}
+function showModal(html,action){
+ $('modal').innerHTML=html;$('overlay').hidden=false;
+ $('modal-action').addEventListener('click',action);
+ $('modal-action').focus({preventScroll:true});
+}
+$('undo').onclick=()=>{
+ if(state!=='playing'||!history.length)return;
+ grid^=masks[history.pop()];moves--;hintIndex=-1;tone(280,.1);render();
+ message('One step back. A fresh perspective.');
+};
+$('reset').onclick=()=>{
+ if(state!=='playing')return;
+ grid=initial;moves=0;history=[];hintIndex=-1;render();
+ message('A fresh start. Hint penalties still apply this round.');
+};
+$('hint').onclick=()=>{
+ if(state!=='playing')return;
+ if(hintIndex!==-1){message('Try the outlined tile. Your hint is still active.');return}
+ const solution=solve(grid);
+ for(let i=0;i<16;i++)if((solution>>i)&1){hintIndex=i;break}
+ hints++;render();tone(630,.15);
+ message('Try the outlined tile. Hint used: −120 round points.');
+};
+$('sound').onclick=()=>{
+ sound=!sound;$('sound').style.color=sound?'var(--lime)':'var(--muted)';
+ $('sound').textContent=sound?'♫':'♪';
+ $('sound').setAttribute('aria-label',sound?'Mute sound':'Enable sound');
+ $('sound').setAttribute('aria-pressed',String(sound));tone(550,.15);
+};
+document.addEventListener('keydown',e=>{
+ if(!$('overlay').hidden&&e.key==='Tab'){
+  e.preventDefault();$('modal-action').focus();
+ }
+});
+grid=FULL^masks[2]^masks[5]^masks[14];render();
+showModal(`<div class="mini-grid" aria-hidden="true"><i></i><i class="lit"></i><i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i></i><i class="lit"></i><i></i></div><div class="eyebrow">Small puzzle. Big spark.</div><h2>A brighter kind<br>of brain break.</h2><p>Tap a tile to flip it and its neighbors above, below, left, and right.<br><b style="color:#edf4ed">Light up all 16 tiles to win.</b></p><button class="primary" id="modal-action">Let’s glow ↗</button><span class="subnote">5 puzzles · No time limit · Fewer moves, more points<br>Tap to play, or use arrow keys + Space.</span>`,()=>{level=1;score=0;startLevel()});
+})();
+</script>
+</body>
+</html>
